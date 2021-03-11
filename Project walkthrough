@@ -1,0 +1,32 @@
+For this project I created a virtual environment using Microsoft’s Azure. 
+
+I first began with setting up a resource group named Red Team 1 and set the location specific to my location. At the time of creating this would of been in Australia’s Eastern time zone. After validation, I then went on to setting up a virtual network to ensure I had access to the servers and services I would later deploy. 
+
+The next step was to build a firewall in front of the virtual network to block all traffic. To do this I created a new security group, named it Red Team security group, and set all inbound traffic to block. 
+
+The next step was to build a virtual computing environment. There are a total of three Ubuntu Virtual Machines inside the Red Team resource group. 
+The Jump Box was the first VM created. I set the regions the same as the rest of the environment to follow suit, and titled it Jump-Box-Provisioner. The VM’s size was configured to: Standard - B1s, 1 CPU, and 1 GB RAM. In my terminal I generated a key using SSH instead of using a password all for remote connections. Finally ensuring the Jump Box had a static public IP address so that I would t have to generate a key each time. 
+The following two VM’s would be known as web-1 and web-2 servers. The setup was mostly the same as for the original VM. The regions were the same both.  To remotely connect to the original VM, I ran 
+cat ~/.ssh/id_rsa.pub
+to get the key from the Jump Box. The configuration for the servers were set to: B1ms, 1CPU, and 2GB RAM.
+After setting up the VM’s, I then went to security to change my blocked all traffic to allow port 22 (ssh) traffic so the machine would have access to one another. 
+
+Now it was time to configure my jump box to run Docker containers. The steps are as followed in terminal:
+- docker.io 
+- sudo apt update
+- sudo apt install docker.io 
+- sudo systemctl status/start docker 
+- sudo docker pull cyberxsecurity/ansible
+- sudo docker run -ti cyberxsecurity/ansible:latest bash
+
+From there I set security to allow traffic from my jump box. 
+
+Finally for the provisioners to test the environment. I first connected to the ansible container then created a key from within the container. Then back in azure I went to both VM’s and key the new key from the container to both servers. 
+From there I configured the ansible host file by using nano to I comment webservers header line and add python line to read:
+ansible_python_interpreter=/usr/bin/python3 
+beside each VM IP. Then from the config file I commented remote_user line and replaced root with my username for my VM’s. Lastly I pinged to configure that the servers had connections to the containers. 
+Next up would be setting up a load balancer to equally distribute the traffic among the VM’s. In Azure I created a balancer with the same region and made sure that the IP was static for the red team group. In addition, I set the health probes to run at 5 second intervals with 2 consecutive failures. Then for the backend pools were added to the VM. Lastly going back to security settings and allowing TCP port 80 to have access to the network. 
+
+The second half of the network consisted of the ELK network security group. 
+This group was now added within the Red-Team1 resource group. As before I established an Elk network security group ( set to a different region of Southeast Asia), ELK virtual network, Elk VM ( which required a minimum of 2vCPU’s and 4GIB of memory) and used keys from web 1 and 2 to establish connection. I then set the made a second key from the ELK VM to ssh into an ELK container. 
+Lastly the installation and configuration of filebeat using ansible playbooks. This prep work was all to use Kibana and how it utilizes data. 
